@@ -4,7 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 #include <mgba/internal/gba/cart/gpio.h>
-
+#include <mgba/core/core.h>
 #include <mgba/internal/arm/macros.h>
 #include <mgba/internal/gba/io.h>
 #include <mgba/internal/gba/serialize.h>
@@ -103,6 +103,7 @@ void GBAHardwareInitRTC(struct GBACartridgeHardware* hw) {
 
 	hw->rtc.lastLatch = 0;
 	hw->rtc.offset = 0;
+	_rtcUpdateClock(hw);
 }
 
 void _readPins(struct GBACartridgeHardware* hw) {
@@ -271,21 +272,28 @@ unsigned _rtcOutput(struct GBACartridgeHardware* hw) {
 }
 
 void _rtcUpdateClock(struct GBACartridgeHardware* hw) {
-	time_t t;
-	struct mRTCSource* rtc = hw->p->rtcSource;
-	if (rtc) {
-		if (rtc->sample) {
-			rtc->sample(rtc);
-		}
-		t = rtc->unixTime(rtc);
-	} else {
-		t = time(0);
-	}
-	hw->rtc.lastLatch = t;
-	t -= hw->rtc.offset;
+	static bool		first;
+	static time_t	t;
+	time_t			t_adjusted;
 
+	if (first == false)
+	{
+		struct mRTCSource* rtc = hw->p->rtcSource;
+		if (rtc) {
+			if (rtc->sample) {
+				rtc->sample(rtc);
+			}
+			t = rtc->unixTime(rtc);
+		} else {
+			t = time(0);
+		}
+		hw->rtc.lastLatch = t;
+		t -= hw->rtc.offset;
+		first = true;
+	}
+	t_adjusted = t + ((1.0 / 59.73) * hw->p->video.frameCounter);
 	struct tm date;
-	localtime_r(&t, &date);
+	localtime_r(&t_adjusted, &date);
 	hw->rtc.time[0] = _rtcBCD(date.tm_year - 100);
 	hw->rtc.time[1] = _rtcBCD(date.tm_mon + 1);
 	hw->rtc.time[2] = _rtcBCD(date.tm_mday);

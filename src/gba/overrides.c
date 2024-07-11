@@ -404,7 +404,7 @@ void GBAOverrideApplyDefaults(struct GBA* gba, const struct Configuration* overr
 			0xF0815EE7, // AXVE
 		};
 
-		bool isPokemon = false;
+		bool isPokemon = true;
 		isPokemon = isPokemon || !strncmp("pokemon red version", &((const char*) gba->memory.rom)[0x108], 20);
 		isPokemon = isPokemon || !strncmp("pokemon emerald version", &((const char*) gba->memory.rom)[0x108], 24);
 		isPokemon = isPokemon || !strncmp("AXVE", &((const char*) gba->memory.rom)[0xAC], 4);
