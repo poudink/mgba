@@ -4,7 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 #include <mgba/internal/gba/cart/gpio.h>
-#include <mgba/core/core.h>
+
 #include <mgba/internal/arm/macros.h>
 #include <mgba/internal/gba/io.h>
 #include <mgba/internal/gba/serialize.h>
@@ -276,8 +276,7 @@ void _rtcUpdateClock(struct GBACartridgeHardware* hw) {
 	static time_t	t;
 	time_t			t_adjusted;
 
-	if (first == false)
-	{
+	if (first == false) {
 		struct mRTCSource* rtc = hw->p->rtcSource;
 		if (rtc) {
 			if (rtc->sample) {
@@ -291,20 +290,22 @@ void _rtcUpdateClock(struct GBACartridgeHardware* hw) {
 		t -= hw->rtc.offset;
 		first = true;
 	}
-	t_adjusted = t + ((1.0 / 59.73) * hw->p->video.frameCounter);
-	struct tm date;
-	localtime_r(&t_adjusted, &date);
-	hw->rtc.time[0] = _rtcBCD(date.tm_year - 100);
-	hw->rtc.time[1] = _rtcBCD(date.tm_mon + 1);
-	hw->rtc.time[2] = _rtcBCD(date.tm_mday);
-	hw->rtc.time[3] = _rtcBCD(date.tm_wday);
-	if (RTCControlIsHour24(hw->rtc.control)) {
-		hw->rtc.time[4] = _rtcBCD(date.tm_hour);
-	} else {
-		hw->rtc.time[4] = _rtcBCD(date.tm_hour % 12);
+	else {
+		t_adjusted = t + ((1.0 / 59.73) * hw->p->video.frameCounter);
+		struct tm date;
+		localtime_r(&t_adjusted, &date);
+		hw->rtc.time[0] = _rtcBCD(date.tm_year - 100);
+		hw->rtc.time[1] = _rtcBCD(date.tm_mon + 1);
+		hw->rtc.time[2] = _rtcBCD(date.tm_mday);
+		hw->rtc.time[3] = _rtcBCD(date.tm_wday);
+		if (RTCControlIsHour24(hw->rtc.control)) {
+			hw->rtc.time[4] = _rtcBCD(date.tm_hour);
+		} else {
+			hw->rtc.time[4] = _rtcBCD(date.tm_hour % 12);
+		}
+		hw->rtc.time[5] = _rtcBCD(date.tm_min);
+		hw->rtc.time[6] = _rtcBCD(date.tm_sec);
 	}
-	hw->rtc.time[5] = _rtcBCD(date.tm_min);
-	hw->rtc.time[6] = _rtcBCD(date.tm_sec);
 }
 
 unsigned _rtcBCD(unsigned value) {
