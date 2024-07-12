@@ -272,10 +272,8 @@ unsigned _rtcOutput(struct GBACartridgeHardware* hw) {
 }
 
 void _rtcUpdateClock(struct GBACartridgeHardware* hw) {
-	static bool		first;
-	static time_t	t;
-	time_t			t_adjusted;
-
+	static bool first;
+	static time_t t;
 	if (first == false) {
 		struct mRTCSource* rtc = hw->p->rtcSource;
 		if (rtc) {
@@ -291,7 +289,7 @@ void _rtcUpdateClock(struct GBACartridgeHardware* hw) {
 		first = true;
 	}
 	else {
-		t_adjusted = t + ((1.0 / 59.73) * hw->p->video.frameCounter);
+		time_t t_adjusted = t + hw->p->video.frameCounter / 59.73;
 		struct tm date;
 		localtime_r(&t_adjusted, &date);
 		hw->rtc.time[0] = _rtcBCD(date.tm_year - 100);
